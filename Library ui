@@ -1,21 +1,26 @@
--- Sponge Library UI v2.0
--- Fixed draggable + 580x340 size + working icons!
+-- Sponge Library UI v3.0 - FULL RAINBOW EDITION
+-- Mobile friendly + Rainbow EVERYTHING!
 
 local Sponge = {}
 Sponge.__index = Sponge
 
--- Beautiful themes
-local Themes = {
-    Dark = {
-        bg = Color3.fromRGB(10, 10, 15),
-        surface = Color3.fromRGB(18, 18, 25),
-        surface2 = Color3.fromRGB(25, 25, 35),
-        accent = Color3.fromRGB(255, 215, 0),     -- Yellow
-        accent2 = Color3.fromRGB(255, 200, 50),
-        text = Color3.fromRGB(255, 255, 255),
-        textMuted = Color3.fromRGB(180, 180, 200),
-        border = Color3.fromRGB(255, 215, 0)
-    }
+-- Rainbow colors that cycle
+local RainbowColors = {
+    Color3.fromRGB(255, 0, 0),      -- Red
+    Color3.fromRGB(255, 127, 0),    -- Orange
+    Color3.fromRGB(255, 255, 0),    -- Yellow
+    Color3.fromRGB(0, 255, 0),      -- Green
+    Color3.fromRGB(0, 0, 255),      -- Blue
+    Color3.fromRGB(75, 0, 130),     -- Indigo
+    Color3.fromRGB(148, 0, 211)     -- Violet
+}
+
+local theme = {
+    bg = Color3.fromRGB(10, 10, 15),
+    surface = Color3.fromRGB(18, 18, 25),
+    surface2 = Color3.fromRGB(25, 25, 35),
+    text = Color3.fromRGB(255, 255, 255),
+    textMuted = Color3.fromRGB(180, 180, 200),
 }
 
 local function new(class, props)
@@ -29,10 +34,23 @@ local function tween(obj, props, dur)
         TweenInfo.new(dur or 0.2), props):Play()
 end
 
+-- Rainbow cycling function
+local function startRainbow(obj, property, speed)
+    local index = 1
+    spawn(function()
+        while obj and obj.Parent do
+            pcall(function()
+                obj[property] = RainbowColors[index]
+            end)
+            index = index % #RainbowColors + 1
+            wait(speed or 0.1)
+        end
+    end)
+end
+
 -- Main Window
 function Sponge:Window(opts)
     opts = opts or {}
-    local theme = Themes[opts.Theme or "Dark"]
     
     -- Main GUI
     local gui = new("ScreenGui", {
@@ -42,7 +60,7 @@ function Sponge:Window(opts)
         IgnoreGuiInset = true
     })
     
-    -- Main Frame (580x340 as requested!)
+    -- Main Frame (580x340)
     local frame = new("Frame", {
         Parent = gui,
         BackgroundColor3 = theme.bg,
@@ -52,150 +70,132 @@ function Sponge:Window(opts)
         ClipsDescendants = true
     })
     
-    -- Rounded corners
     new("UICorner", {Parent = frame, CornerRadius = UDim.new(0, 16)})
     
-    -- Yellow border line
-    new("UIStroke", {
+    -- Rainbow border
+    local border = new("UIStroke", {
         Parent = frame,
-        Color = theme.accent,
+        Color = RainbowColors[1],
         Thickness = 2,
         Transparency = 0.3
     })
+    startRainbow(border, "Color", 0.2)
     
     -- ===========================================
-    -- TITLE BAR (DRAGGABLE - FIXED!)
+    -- TITLE BAR (MOBILE DRAGGABLE!)
     -- ===========================================
     local title = new("Frame", {
         Parent = frame,
         BackgroundColor3 = theme.surface,
-        Size = UDim2.new(1, 0, 0, 45),
+        Size = UDim2.new(1, 0, 0, 60),  -- Taller for mobile
         BorderSizePixel = 0
     })
     
     new("UICorner", {Parent = title, CornerRadius = UDim.new(0, 16)})
     
-    -- Yellow line under title
-    new("Frame", {
+    -- Rainbow line under title
+    local titleLine = new("Frame", {
         Parent = title,
-        BackgroundColor3 = theme.accent,
-        Size = UDim2.new(1, -20, 0, 2),
-        Position = UDim2.new(0, 10, 1, -2),
+        BackgroundColor3 = RainbowColors[1],
+        Size = UDim2.new(1, -20, 0, 3),
+        Position = UDim2.new(0, 10, 1, -5),
         BorderSizePixel = 0
     })
+    startRainbow(titleLine, "BackgroundColor3", 0.15)
     
-    -- Title Text
-    new("TextLabel", {
+    -- ===========================================
+    -- RAINBOW ICON (SPONGE EMOJI)
+    -- ===========================================
+    local icon = new("TextLabel", {
         Parent = title,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -100, 1, 0),
-        Position = UDim2.new(0, 15, 0, 0),
-        Text = opts.Title or "Sponge Library Ui",
-        TextColor3 = theme.accent,
+        Size = UDim2.new(0, 45, 0, 45),
+        Position = UDim2.new(0, 10, 0.5, -22.5),
+        Text = "🧽",
+        TextColor3 = RainbowColors[1],
         Font = Enum.Font.GothamBold,
-        TextSize = 18,
+        TextSize = 35,
+        TextScaled = true
+    })
+    startRainbow(icon, "TextColor3", 0.1)
+    
+    -- ===========================================
+    -- RAINBOW TITLE TEXT
+    -- ===========================================
+    local titleText = new("TextLabel", {
+        Parent = title,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, -140, 1, 0),
+        Position = UDim2.new(0, 65, 0, 0),
+        Text = opts.Title or "Sponge Hub",
+        TextColor3 = RainbowColors[1],
+        Font = Enum.Font.GothamBold,
+        TextSize = 24,
         TextXAlignment = Enum.TextXAlignment.Left
     })
+    startRainbow(titleText, "TextColor3", 0.15)
     
     -- ===========================================
-    -- ICON BUTTON (Working!)
+    -- RAINBOW CLOSE BUTTON
     -- ===========================================
-    local toggleBtn = new("ImageButton", {
+    local closeBtn = new("TextButton", {
         Parent = title,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(0, 32, 0, 32),
-        Position = UDim2.new(1, -42, 0.5, -16),
-        Image = "rbxassetid://13498440962",  -- Back icon
-        ImageColor3 = theme.accent,
-        ScaleType = Enum.ScaleType.Fit,
-        BackgroundColor3 = theme.surface2,
         BackgroundTransparency = 0.3,
-        Active = true,
-        Visible = true
+        BackgroundColor3 = theme.surface2,
+        Size = UDim2.new(0, 45, 0, 45),
+        Position = UDim2.new(1, -55, 0.5, -22.5),
+        Text = "✕",
+        TextColor3 = RainbowColors[1],
+        Font = Enum.Font.GothamBold,
+        TextSize = 28,
+        AutoButtonColor = false
     })
     
-    new("UICorner", {Parent = toggleBtn, CornerRadius = UDim.new(0, 8)})
+    new("UICorner", {Parent = closeBtn, CornerRadius = UDim.new(0, 12)})
+    startRainbow(closeBtn, "TextColor3", 0.1)
+    startRainbow(closeBtn, "BackgroundColor3", 0.3)
     
-    -- Store both icon IDs
-    local ICONS = {
-        BACK = "rbxassetid://13498440962",    -- Back arrow
-        CLOSE = "rbxassetid://13498441234"    -- Close/X icon
-    }
-    
-    local isBackMode = true
-    
-    -- Hover effect
-    toggleBtn.MouseEnter:Connect(function()
-        tween(toggleBtn, {BackgroundTransparency = 0}, 0.15)
-        tween(toggleBtn, {ImageColor3 = Color3.fromRGB(255, 255, 255)}, 0.15)
-    end)
-    
-    toggleBtn.MouseLeave:Connect(function()
-        tween(toggleBtn, {BackgroundTransparency = 0.3}, 0.15)
-        tween(toggleBtn, {ImageColor3 = theme.accent}, 0.15)
-    end)
-    
-    -- Click handler
-    toggleBtn.MouseButton1Click:Connect(function()
-        if isBackMode then
-            print("🔙 Back button clicked")
-            tween(toggleBtn, {Rotation = -10}, 0.1)
-            wait(0.1)
-            tween(toggleBtn, {Rotation = 0}, 0.1)
-        else
-            print("❌ Closing GUI")
-            tween(frame, {BackgroundTransparency = 1}, 0.2)
-            tween(title, {BackgroundTransparency = 1}, 0.2)
-            tween(toggleBtn, {ImageTransparency = 1}, 0.2)
-            wait(0.2)
-            gui:Destroy()
-        end
-        
-        isBackMode = not isBackMode
-        tween(toggleBtn, {ImageTransparency = 1}, 0.1)
-        wait(0.1)
-        toggleBtn.Image = isBackMode and ICONS.BACK or ICONS.CLOSE
-        tween(toggleBtn, {ImageTransparency = 0}, 0.1)
+    closeBtn.MouseButton1Click:Connect(function()
+        tween(frame, {BackgroundTransparency = 1}, 0.2)
+        wait(0.2)
+        gui:Destroy()
     end)
     
     -- ===========================================
-    -- DRAGGABLE FUNCTIONALITY (FIXED & STRONGER!)
+    -- MOBILE DRAGGABLE (TOUCH FIXED!)
     -- ===========================================
     do
         local dragging = false
-        local dragInput = nil
         local dragStart = nil
         local startPos = nil
         
-        -- Make sure title bar captures all mouse events
         title.Active = true
         title.Selectable = true
         
-        -- Start dragging
+        -- Touch start
         title.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if input.UserInputType == Enum.UserInputType.Touch or 
+               input.UserInputType == Enum.UserInputType.MouseButton1 then
                 dragging = true
                 dragStart = input.Position
                 startPos = frame.Position
-                
-                -- Visual feedback while dragging
-                tween(title, {BackgroundColor3 = theme.surface2}, 0.1)
+                title.BackgroundColor3 = theme.surface2
             end
         end)
         
-        -- Stop dragging
+        -- Touch end
         title.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if input.UserInputType == Enum.UserInputType.Touch or 
+               input.UserInputType == Enum.UserInputType.MouseButton1 then
                 dragging = false
-                dragInput = nil
-                tween(title, {BackgroundColor3 = theme.surface}, 0.1)
+                title.BackgroundColor3 = theme.surface
             end
         end)
         
-        -- Move while dragging
-        local uis = game:GetService("UserInputService")
-        uis.InputChanged:Connect(function(input)
-            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        -- Touch move
+        game:GetService("UserInputService").InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.Touch or 
+               input.UserInputType == Enum.UserInputType.MouseMovement) then
                 local delta = input.Position - dragStart
                 frame.Position = UDim2.new(
                     startPos.X.Scale,
@@ -203,14 +203,6 @@ function Sponge:Window(opts)
                     startPos.Y.Scale,
                     startPos.Y.Offset + delta.Y
                 )
-            end
-        end)
-        
-        -- Extra safety: stop dragging if mouse leaves window
-        uis.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = false
-                tween(title, {BackgroundColor3 = theme.surface}, 0.1)
             end
         end)
     end
@@ -221,22 +213,32 @@ function Sponge:Window(opts)
     local content = new("ScrollingFrame", {
         Parent = frame,
         BackgroundColor3 = theme.surface,
-        Size = UDim2.new(1, -20, 1, -55),
-        Position = UDim2.new(0, 10, 0, 50),
+        Size = UDim2.new(1, -20, 1, -70),
+        Position = UDim2.new(0, 10, 0, 65),
         CanvasSize = UDim2.new(0, 0, 0, 0),
-        ScrollBarThickness = 4,
-        ScrollBarImageColor3 = theme.accent,
+        ScrollBarThickness = 6,
+        ScrollBarImageColor3 = RainbowColors[1],
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
-        BorderSizePixel = 0,
-        Active = true
+        BorderSizePixel = 0
     })
     
     new("UICorner", {Parent = content, CornerRadius = UDim.new(0, 12)})
-    new("UIStroke", {Parent = content, Color = theme.accent, Thickness = 1, Transparency = 0.5})
+    
+    -- Rainbow scrollbar
+    spawn(function()
+        while content and content.Parent do
+            for _, color in ipairs(RainbowColors) do
+                if content and content.Parent then
+                    content.ScrollBarImageColor3 = color
+                    wait(0.1)
+                end
+            end
+        end
+    end)
     
     local layout = new("UIListLayout", {
         Parent = content,
-        Padding = UDim.new(0, 8),
+        Padding = UDim.new(0, 10),
         SortOrder = Enum.SortOrder.LayoutOrder
     })
     
@@ -253,8 +255,6 @@ function Sponge:Window(opts)
         gui = gui,
         frame = frame,
         content = content,
-        theme = theme,
-        toggleBtn = toggleBtn,
         
         Close = function()
             tween(frame, {BackgroundTransparency = 1}, 0.2)
@@ -262,11 +262,7 @@ function Sponge:Window(opts)
             gui:Destroy()
         end,
         
-        SetBackMode = function(self, enabled)
-            isBackMode = enabled
-            toggleBtn.Image = isBackMode and ICONS.BACK or ICONS.CLOSE
-        end,
-        
+        -- Section creator
         Section = function(self, title)
             local section = new("Frame", {
                 Parent = content,
@@ -276,93 +272,116 @@ function Sponge:Window(opts)
                 BorderSizePixel = 0
             })
             
-            new("UICorner", {Parent = section, CornerRadius = UDim.new(0, 10)})
+            new("UICorner", {Parent = section, CornerRadius = UDim.new(0, 12)})
             
+            -- Rainbow header line
             if title then
-                new("Frame", {
+                local headerLine = new("Frame", {
                     Parent = section,
-                    BackgroundColor3 = theme.accent,
-                    Size = UDim2.new(1, -20, 0, 2),
-                    Position = UDim2.new(0, 10, 0, 32),
+                    BackgroundColor3 = RainbowColors[1],
+                    Size = UDim2.new(1, -20, 0, 3),
+                    Position = UDim2.new(0, 10, 0, 35),
                     BorderSizePixel = 0
                 })
+                startRainbow(headerLine, "BackgroundColor3", 0.2)
                 
-                new("TextLabel", {
+                local titleLabel = new("TextLabel", {
                     Parent = section,
                     BackgroundTransparency = 1,
                     Size = UDim2.new(1, -20, 0, 30),
                     Position = UDim2.new(0, 10, 0, 5),
                     Text = title,
-                    TextColor3 = theme.accent,
+                    TextColor3 = RainbowColors[1],
                     Font = Enum.Font.GothamBold,
-                    TextSize = 15,
+                    TextSize = 18,
                     TextXAlignment = Enum.TextXAlignment.Left
                 })
+                startRainbow(titleLabel, "TextColor3", 0.15)
             end
             
-            local secLayout = new("UIListLayout", {
+            local sectionLayout = new("UIListLayout", {
                 Parent = section,
-                Padding = UDim.new(0, 6),
+                Padding = UDim.new(0, 8),
                 SortOrder = Enum.SortOrder.LayoutOrder
             })
             
             new("UIPadding", {
                 Parent = section,
-                PaddingTop = UDim.new(0, title and 40 or 10),
-                PaddingBottom = UDim.new(0, 10),
-                PaddingLeft = UDim.new(0, 10),
-                PaddingRight = UDim.new(0, 10)
+                PaddingTop = UDim.new(0, title and 45 or 12),
+                PaddingBottom = UDim.new(0, 12),
+                PaddingLeft = UDim.new(0, 12),
+                PaddingRight = UDim.new(0, 12)
             })
             
             local sec = {
+                -- Toggle
                 Toggle = function(self, opt)
                     opt = opt or {}
                     
                     local f = new("Frame", {
                         Parent = section,
                         BackgroundColor3 = theme.surface,
-                        Size = UDim2.new(1, 0, 0, 40),
+                        Size = UDim2.new(1, 0, 0, 45),
                         BorderSizePixel = 0
                     })
                     
-                    new("UICorner", {Parent = f, CornerRadius = UDim.new(0, 8)})
+                    new("UICorner", {Parent = f, CornerRadius = UDim.new(0, 10)})
                     
-                    new("Frame", {
+                    -- Rainbow accent line
+                    local accentLine = new("Frame", {
                         Parent = f,
-                        BackgroundColor3 = theme.accent,
-                        Size = UDim2.new(0, 3, 1, -10),
+                        BackgroundColor3 = RainbowColors[1],
+                        Size = UDim2.new(0, 4, 1, -10),
                         Position = UDim2.new(0, 0, 0.5, -5),
                         BorderSizePixel = 0
                     })
+                    startRainbow(accentLine, "BackgroundColor3", 0.1)
                     
                     new("TextLabel", {
                         Parent = f,
                         BackgroundTransparency = 1,
-                        Size = UDim2.new(1, -70, 1, 0),
+                        Size = UDim2.new(1, -80, 1, 0),
                         Position = UDim2.new(0, 15, 0, 0),
                         Text = opt.Title or "Toggle",
                         TextColor3 = theme.text,
                         Font = Enum.Font.Gotham,
-                        TextSize = 14,
+                        TextSize = 15,
                         TextXAlignment = Enum.TextXAlignment.Left
                     })
                     
+                    if opt.Description then
+                        new("TextLabel", {
+                            Parent = f,
+                            BackgroundTransparency = 1,
+                            Size = UDim2.new(1, -80, 0, 16),
+                            Position = UDim2.new(0, 15, 0, 24),
+                            Text = opt.Description,
+                            TextColor3 = theme.textMuted,
+                            Font = Enum.Font.Gotham,
+                            TextSize = 11
+                        })
+                        f.Size = UDim2.new(1, 0, 0, 60)
+                    end
+                    
                     local btn = new("TextButton", {
                         Parent = f,
-                        BackgroundColor3 = opt.Default and theme.accent or theme.surface,
-                        Size = UDim2.new(0, 44, 0, 24),
-                        Position = UDim2.new(1, -52, 0.5, -12),
+                        BackgroundColor3 = opt.Default and RainbowColors[1] or theme.surface,
+                        Size = UDim2.new(0, 50, 0, 28),
+                        Position = UDim2.new(1, -60, 0.5, -14),
                         Text = "",
                         AutoButtonColor = false
                     })
                     
                     new("UICorner", {Parent = btn, CornerRadius = UDim.new(1, 0)})
+                    if not opt.Default then
+                        startRainbow(btn, "BackgroundColor3", 0.2)
+                    end
                     
                     local circle = new("Frame", {
                         Parent = btn,
                         BackgroundColor3 = Color3.new(1,1,1),
-                        Size = UDim2.new(0, 18, 0, 18),
-                        Position = opt.Default and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9),
+                        Size = UDim2.new(0, 20, 0, 20),
+                        Position = opt.Default and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10),
                         BorderSizePixel = 0
                     })
                     
@@ -372,59 +391,113 @@ function Sponge:Window(opts)
                     
                     btn.MouseButton1Click:Connect(function()
                         state = not state
-                        tween(btn, {BackgroundColor3 = state and theme.accent or theme.surface}, 0.15)
+                        if state then
+                            tween(btn, {BackgroundColor3 = RainbowColors[1]}, 0.15)
+                        else
+                            startRainbow(btn, "BackgroundColor3", 0.2)
+                        end
                         tween(circle, {
-                            Position = state and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+                            Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
                         }, 0.15)
                         if opt.Callback then opt.Callback(state) end
                     end)
                 end,
                 
+                -- Button
                 Button = function(self, opt)
                     opt = opt or {}
                     
                     local btn = new("TextButton", {
                         Parent = section,
                         BackgroundColor3 = theme.surface,
-                        Size = UDim2.new(1, 0, 0, 38),
+                        Size = UDim2.new(1, 0, 0, 45),
                         Text = "",
                         AutoButtonColor = false
                     })
                     
-                    new("UICorner", {Parent = btn, CornerRadius = UDim.new(0, 8)})
+                    new("UICorner", {Parent = btn, CornerRadius = UDim.new(0, 10)})
                     
-                    new("UIStroke", {
+                    -- Rainbow border
+                    local btnStroke = new("UIStroke", {
                         Parent = btn,
-                        Color = theme.accent,
-                        Thickness = 1,
-                        Transparency = 0.7
+                        Color = RainbowColors[1],
+                        Thickness = 2,
+                        Transparency = 0.5
                     })
+                    startRainbow(btnStroke, "Color", 0.15)
                     
                     new("TextLabel", {
                         Parent = btn,
                         BackgroundTransparency = 1,
                         Size = UDim2.new(1, -20, 1, 0),
-                        Position = UDim2.new(0, 12, 0, 0),
+                        Position = UDim2.new(0, 15, 0, 0),
                         Text = opt.Title or "Button",
-                        TextColor3 = theme.accent,
+                        TextColor3 = RainbowColors[1],
                         Font = Enum.Font.GothamBold,
-                        TextSize = 14,
+                        TextSize = 16,
                         TextXAlignment = Enum.TextXAlignment.Left
                     })
                     
+                    if opt.Description then
+                        new("TextLabel", {
+                            Parent = btn,
+                            BackgroundTransparency = 1,
+                            Size = UDim2.new(1, -20, 0, 18),
+                            Position = UDim2.new(0, 15, 0, 24),
+                            Text = opt.Description,
+                            TextColor3 = theme.textMuted,
+                            Font = Enum.Font.Gotham,
+                            TextSize = 12
+                        })
+                        btn.Size = UDim2.new(1, 0, 0, 60)
+                    end
+                    
+                    btn.MouseButton1Click:Connect(opt.Callback or function() end)
+                    
+                    -- Rainbow hover
                     btn.MouseEnter:Connect(function()
-                        tween(btn, {BackgroundColor3 = theme.accent}, 0.15)
-                        tween(btn:FindFirstChildOfClass("TextLabel"), {TextColor3 = Color3.new(0,0,0)}, 0.15)
+                        tween(btn, {BackgroundColor3 = theme.surface2}, 0.15)
                     end)
                     
                     btn.MouseLeave:Connect(function()
                         tween(btn, {BackgroundColor3 = theme.surface}, 0.15)
-                        tween(btn:FindFirstChildOfClass("TextLabel"), {TextColor3 = theme.accent}, 0.15)
                     end)
+                end,
+                
+                -- Label
+                Label = function(self, opt)
+                    opt = opt or {}
                     
-                    btn.MouseButton1Click:Connect(opt.Callback or function() end)
+                    local label = new("TextLabel", {
+                        Parent = section,
+                        BackgroundTransparency = 1,
+                        Size = UDim2.new(1, 0, 0, opt.Height or 24),
+                        Text = opt.Text or "Label",
+                        TextColor3 = opt.Rainbow and RainbowColors[1] or opt.Color or theme.textMuted,
+                        Font = Enum.Font.Gotham,
+                        TextSize = opt.Size or 14,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        TextWrapped = true
+                    })
                     
-                    return btn
+                    if opt.Rainbow then
+                        startRainbow(label, "TextColor3", 0.15)
+                    end
+                    
+                    return label
+                end,
+                
+                -- Separator
+                Separator = function(self)
+                    local sep = new("Frame", {
+                        Parent = section,
+                        BackgroundColor3 = RainbowColors[1],
+                        Size = UDim2.new(1, -20, 0, 2),
+                        Position = UDim2.new(0, 10, 0, 0),
+                        BorderSizePixel = 0
+                    })
+                    startRainbow(sep, "BackgroundColor3", 0.1)
+                    return sep
                 end
             }
             
@@ -435,10 +508,9 @@ function Sponge:Window(opts)
     return win
 end
 
--- Notification system
+-- Rainbow Notification
 function Sponge:Notify(opts)
     opts = opts or {}
-    local theme = Themes.Dark
     
     local gui = game:GetService("CoreGui"):FindFirstChild("SpongeNotifs")
     if not gui then
@@ -453,50 +525,53 @@ function Sponge:Notify(opts)
     local notif = new("Frame", {
         Parent = gui,
         BackgroundColor3 = theme.surface,
-        Size = UDim2.new(0, 300, 0, 70),
-        Position = UDim2.new(1, -320, 0, -90),
+        Size = UDim2.new(0, 320, 0, 80),
+        Position = UDim2.new(1, -340, 0, -100),
         BorderSizePixel = 0
     })
     
-    new("UICorner", {Parent = notif, CornerRadius = UDim.new(0, 12)})
+    new("UICorner", {Parent = notif, CornerRadius = UDim.new(0, 14)})
     
-    -- Yellow line
-    new("Frame", {
+    -- Rainbow line
+    local notifLine = new("Frame", {
         Parent = notif,
-        BackgroundColor3 = theme.accent,
-        Size = UDim2.new(0, 4, 1, -20),
+        BackgroundColor3 = RainbowColors[1],
+        Size = UDim2.new(0, 6, 1, -20),
         Position = UDim2.new(0, 0, 0.5, -10),
         BorderSizePixel = 0
     })
+    startRainbow(notifLine, "BackgroundColor3", 0.1)
     
-    new("TextLabel", {
+    -- Rainbow title
+    local notifTitle = new("TextLabel", {
         Parent = notif,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -20, 0, 20),
-        Position = UDim2.new(0, 15, 0, 12),
-        Text = opts.Title or "Sponge Library Ui",
-        TextColor3 = theme.accent,
+        Size = UDim2.new(1, -30, 0, 25),
+        Position = UDim2.new(0, 20, 0, 12),
+        Text = opts.Title or "Sponge Hub",
+        TextColor3 = RainbowColors[1],
         Font = Enum.Font.GothamBold,
-        TextSize = 15,
+        TextSize = 18,
         TextXAlignment = Enum.TextXAlignment.Left
     })
+    startRainbow(notifTitle, "TextColor3", 0.15)
     
     new("TextLabel", {
         Parent = notif,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -20, 0, 30),
-        Position = UDim2.new(0, 15, 0, 32),
+        Size = UDim2.new(1, -30, 0, 30),
+        Position = UDim2.new(0, 20, 0, 38),
         Text = opts.Content or "",
-        TextColor3 = theme.textMuted,
+        TextColor3 = theme.text,
         Font = Enum.Font.Gotham,
-        TextSize = 13,
+        TextSize = 14,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextWrapped = true
     })
     
-    tween(notif, {Position = UDim2.new(1, -320, 0, 10)}, 0.3)
+    tween(notif, {Position = UDim2.new(1, -340, 0, 20)}, 0.3)
     task.wait(opts.Duration or 3)
-    tween(notif, {Position = UDim2.new(1, -320, 0, -90)}, 0.3)
+    tween(notif, {Position = UDim2.new(1, -340, 0, -100)}, 0.3)
     task.wait(0.3)
     notif:Destroy()
 end
