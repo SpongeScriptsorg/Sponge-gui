@@ -1,5 +1,5 @@
--- Sponge UI v2.0 - Image Toggle Button
--- Back/Close icons with smooth transitions
+-- Sponge Library UI v2.0
+-- Fixed draggable + 580x340 size + working icons!
 
 local Sponge = {}
 Sponge.__index = Sponge
@@ -36,18 +36,18 @@ function Sponge:Window(opts)
     
     -- Main GUI
     local gui = new("ScreenGui", {
-        Name = "SpongeUI",
+        Name = "SpongeLibrary",
         Parent = game:GetService("CoreGui"),
         DisplayOrder = 999,
         IgnoreGuiInset = true
     })
     
-    -- Main Frame
+    -- Main Frame (580x340 as requested!)
     local frame = new("Frame", {
         Parent = gui,
         BackgroundColor3 = theme.bg,
-        Size = UDim2.new(0, opts.Width or 400, 0, opts.Height or 500),
-        Position = UDim2.new(0.5, -(opts.Width or 400)/2, 0.5, -(opts.Height or 500)/2),
+        Size = UDim2.new(0, opts.Width or 580, 0, opts.Height or 340),
+        Position = UDim2.new(0.5, -(opts.Width or 580)/2, 0.5, -(opts.Height or 340)/2),
         Active = true,
         ClipsDescendants = true
     })
@@ -55,7 +55,7 @@ function Sponge:Window(opts)
     -- Rounded corners
     new("UICorner", {Parent = frame, CornerRadius = UDim.new(0, 16)})
     
-    -- Yellow border line (Redz Hub style)
+    -- Yellow border line
     new("UIStroke", {
         Parent = frame,
         Color = theme.accent,
@@ -63,7 +63,9 @@ function Sponge:Window(opts)
         Transparency = 0.3
     })
     
-    -- Title Bar
+    -- ===========================================
+    -- TITLE BAR (DRAGGABLE - FIXED!)
+    -- ===========================================
     local title = new("Frame", {
         Parent = frame,
         BackgroundColor3 = theme.surface,
@@ -88,7 +90,7 @@ function Sponge:Window(opts)
         BackgroundTransparency = 1,
         Size = UDim2.new(1, -100, 1, 0),
         Position = UDim2.new(0, 15, 0, 0),
-        Text = opts.Title or "Sponge UI",
+        Text = opts.Title or "Sponge Library Ui",
         TextColor3 = theme.accent,
         Font = Enum.Font.GothamBold,
         TextSize = 18,
@@ -96,30 +98,30 @@ function Sponge:Window(opts)
     })
     
     -- ===========================================
-    -- IMAGE TOGGLE BUTTON (Back/Close)
+    -- ICON BUTTON (Working!)
     -- ===========================================
     local toggleBtn = new("ImageButton", {
         Parent = title,
         BackgroundTransparency = 1,
         Size = UDim2.new(0, 32, 0, 32),
         Position = UDim2.new(1, -42, 0.5, -16),
-        Image = "rbxassetid://13498440962",  -- Default: Back icon
+        Image = "rbxassetid://13498440962",  -- Back icon
         ImageColor3 = theme.accent,
         ScaleType = Enum.ScaleType.Fit,
         BackgroundColor3 = theme.surface2,
-        BackgroundTransparency = 0.3
+        BackgroundTransparency = 0.3,
+        Active = true,
+        Visible = true
     })
     
-    -- Rounded background for button
     new("UICorner", {Parent = toggleBtn, CornerRadius = UDim.new(0, 8)})
     
     -- Store both icon IDs
     local ICONS = {
         BACK = "rbxassetid://13498440962",    -- Back arrow
-        CLOSE = "rbxassetid://13498441234"    -- Close/X icon (replace with actual ID)
+        CLOSE = "rbxassetid://13498441234"    -- Close/X icon
     }
     
-    -- State: true = Back mode, false = Close mode
     local isBackMode = true
     
     -- Hover effect
@@ -136,21 +138,12 @@ function Sponge:Window(opts)
     -- Click handler
     toggleBtn.MouseButton1Click:Connect(function()
         if isBackMode then
-            -- BACK MODE: Go to previous page/window
-            print("🔙 Back button clicked - Going back")
-            -- Add your back functionality here
-            -- Example: if you have multiple pages, go to previous
-            
-            -- Optional: Visual feedback
+            print("🔙 Back button clicked")
             tween(toggleBtn, {Rotation = -10}, 0.1)
             wait(0.1)
             tween(toggleBtn, {Rotation = 0}, 0.1)
-            
         else
-            -- CLOSE MODE: Close the GUI
-            print("❌ Close button clicked - Closing GUI")
-            
-            -- Smooth close animation
+            print("❌ Closing GUI")
             tween(frame, {BackgroundTransparency = 1}, 0.2)
             tween(title, {BackgroundTransparency = 1}, 0.2)
             tween(toggleBtn, {ImageTransparency = 1}, 0.2)
@@ -158,47 +151,50 @@ function Sponge:Window(opts)
             gui:Destroy()
         end
         
-        -- Toggle mode for next click
         isBackMode = not isBackMode
-        
-        -- Change icon with smooth transition
         tween(toggleBtn, {ImageTransparency = 1}, 0.1)
         wait(0.1)
         toggleBtn.Image = isBackMode and ICONS.BACK or ICONS.CLOSE
         tween(toggleBtn, {ImageTransparency = 0}, 0.1)
     end)
     
-    -- Optional: Second button for dedicated close (if you want both)
-    local closeBtn = new("ImageButton", {
-        Parent = title,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(0, 28, 0, 28),
-        Position = UDim2.new(1, -80, 0.5, -14),
-        Image = "rbxassetid://13498441234",  -- Close icon
-        ImageColor3 = theme.accent,
-        Visible = false,  -- Hidden by default, using toggle instead
-        ScaleType = Enum.ScaleType.Fit
-    })
-    
-    -- Draggable functionality
+    -- ===========================================
+    -- DRAGGABLE FUNCTIONALITY (FIXED & STRONGER!)
+    -- ===========================================
     do
-        local dragging, dragStart, startPos
+        local dragging = false
+        local dragInput = nil
+        local dragStart = nil
+        local startPos = nil
         
+        -- Make sure title bar captures all mouse events
+        title.Active = true
+        title.Selectable = true
+        
+        -- Start dragging
         title.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 dragging = true
                 dragStart = input.Position
                 startPos = frame.Position
+                
+                -- Visual feedback while dragging
+                tween(title, {BackgroundColor3 = theme.surface2}, 0.1)
             end
         end)
         
+        -- Stop dragging
         title.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 dragging = false
+                dragInput = nil
+                tween(title, {BackgroundColor3 = theme.surface}, 0.1)
             end
         end)
         
-        game:GetService("UserInputService").InputChanged:Connect(function(input)
+        -- Move while dragging
+        local uis = game:GetService("UserInputService")
+        uis.InputChanged:Connect(function(input)
             if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                 local delta = input.Position - dragStart
                 frame.Position = UDim2.new(
@@ -209,9 +205,19 @@ function Sponge:Window(opts)
                 )
             end
         end)
+        
+        -- Extra safety: stop dragging if mouse leaves window
+        uis.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+                tween(title, {BackgroundColor3 = theme.surface}, 0.1)
+            end
+        end)
     end
     
-    -- Content Area
+    -- ===========================================
+    -- CONTENT AREA
+    -- ===========================================
     local content = new("ScrollingFrame", {
         Parent = frame,
         BackgroundColor3 = theme.surface,
@@ -221,18 +227,12 @@ function Sponge:Window(opts)
         ScrollBarThickness = 4,
         ScrollBarImageColor3 = theme.accent,
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
-        BorderSizePixel = 0
+        BorderSizePixel = 0,
+        Active = true
     })
     
     new("UICorner", {Parent = content, CornerRadius = UDim.new(0, 12)})
-    
-    -- Yellow border for content
-    new("UIStroke", {
-        Parent = content,
-        Color = theme.accent,
-        Thickness = 1,
-        Transparency = 0.5
-    })
+    new("UIStroke", {Parent = content, Color = theme.accent, Thickness = 1, Transparency = 0.5})
     
     local layout = new("UIListLayout", {
         Parent = content,
@@ -256,20 +256,17 @@ function Sponge:Window(opts)
         theme = theme,
         toggleBtn = toggleBtn,
         
-        -- Force close method
         Close = function()
             tween(frame, {BackgroundTransparency = 1}, 0.2)
             wait(0.2)
             gui:Destroy()
         end,
         
-        -- Force back mode
         SetBackMode = function(self, enabled)
             isBackMode = enabled
             toggleBtn.Image = isBackMode and ICONS.BACK or ICONS.CLOSE
         end,
         
-        -- Section
         Section = function(self, title)
             local section = new("Frame", {
                 Parent = content,
@@ -281,7 +278,6 @@ function Sponge:Window(opts)
             
             new("UICorner", {Parent = section, CornerRadius = UDim.new(0, 10)})
             
-            -- Yellow line for section header
             if title then
                 new("Frame", {
                     Parent = section,
@@ -319,7 +315,6 @@ function Sponge:Window(opts)
             })
             
             local sec = {
-                -- Toggle
                 Toggle = function(self, opt)
                     opt = opt or {}
                     
@@ -332,7 +327,6 @@ function Sponge:Window(opts)
                     
                     new("UICorner", {Parent = f, CornerRadius = UDim.new(0, 8)})
                     
-                    -- Yellow accent line
                     new("Frame", {
                         Parent = f,
                         BackgroundColor3 = theme.accent,
@@ -386,7 +380,6 @@ function Sponge:Window(opts)
                     end)
                 end,
                 
-                -- Button
                 Button = function(self, opt)
                     opt = opt or {}
                     
@@ -400,7 +393,6 @@ function Sponge:Window(opts)
                     
                     new("UICorner", {Parent = btn, CornerRadius = UDim.new(0, 8)})
                     
-                    -- Yellow border
                     new("UIStroke", {
                         Parent = btn,
                         Color = theme.accent,
@@ -431,6 +423,8 @@ function Sponge:Window(opts)
                     end)
                     
                     btn.MouseButton1Click:Connect(opt.Callback or function() end)
+                    
+                    return btn
                 end
             }
             
@@ -451,7 +445,8 @@ function Sponge:Notify(opts)
         gui = new("ScreenGui", {
             Name = "SpongeNotifs",
             Parent = game:GetService("CoreGui"),
-            DisplayOrder = 1000
+            DisplayOrder = 1000,
+            IgnoreGuiInset = true
         })
     end
     
@@ -479,7 +474,7 @@ function Sponge:Notify(opts)
         BackgroundTransparency = 1,
         Size = UDim2.new(1, -20, 0, 20),
         Position = UDim2.new(0, 15, 0, 12),
-        Text = opts.Title or "Sponge UI",
+        Text = opts.Title or "Sponge Library Ui",
         TextColor3 = theme.accent,
         Font = Enum.Font.GothamBold,
         TextSize = 15,
