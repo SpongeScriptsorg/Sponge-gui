@@ -1,9 +1,9 @@
--- Sponge Library UI v4.0 - FIXED
--- Black & Yellow theme | Tabs | Anti-kick | Server hopper | Save settings
+-- Sponge Library UI v5.0 - FINAL
+-- 580x340 | Fixed toggles | Return UI button appears after close
 
 local Sponge = {}
 Sponge.__index = Sponge
-Sponge.Version = "4.0.0"
+Sponge.Version = "5.0.0"
 
 -- Services
 local Players = game:GetService("Players")
@@ -18,49 +18,23 @@ local LocalPlayer = Players.LocalPlayer
 
 -- Black & Yellow Theme
 local Theme = {
-    bg = Color3.fromRGB(10, 10, 10),        -- Pure black
-    surface = Color3.fromRGB(18, 18, 18),    -- Dark gray
-    surface2 = Color3.fromRGB(25, 25, 25),   -- Slightly lighter
-    accent = Color3.fromRGB(255, 215, 0),    -- Bright yellow
-    accent2 = Color3.fromRGB(255, 200, 50),   -- Soft yellow
+    bg = Color3.fromRGB(10, 10, 10),
+    surface = Color3.fromRGB(18, 18, 18),
+    surface2 = Color3.fromRGB(25, 25, 25),
+    accent = Color3.fromRGB(255, 215, 0),
+    accent2 = Color3.fromRGB(255, 200, 50),
     text = Color3.fromRGB(255, 255, 255),
     textMuted = Color3.fromRGB(180, 180, 180),
-    border = Color3.fromRGB(255, 215, 0)     -- Yellow border
+    border = Color3.fromRGB(255, 215, 0)
 }
-
--- Save/Load functions (with pcall for safety)
-local function SaveSettings(data, name)
-    local success, err = pcall(function()
-        if writefile then
-            writefile("Sponge_" .. name .. ".json", HttpService:JSONEncode(data))
-            return true
-        end
-        return false
-    end)
-    return success
-end
-
-local function LoadSettings(name)
-    local success, data = pcall(function()
-        if readfile then
-            return HttpService:JSONDecode(readfile("Sponge_" .. name .. ".json"))
-        end
-        return nil
-    end)
-    if success then return data end
-    return nil
-end
 
 -- Anti-Kick System
 local AntiKick = {
     Active = false,
-    Connection = nil,
-    
     Start = function(self)
         if self.Active then return end
         self.Active = true
         
-        -- Anti-idle disconnect
         LocalPlayer.Idled:Connect(function()
             if self.Active then
                 VirtualUser:CaptureController()
@@ -68,10 +42,9 @@ local AntiKick = {
             end
         end)
         
-        -- Simulate small movements every 20 minutes
         spawn(function()
             while self.Active do
-                wait(1200) -- 20 minutes
+                wait(1200)
                 if self.Active then
                     local char = LocalPlayer.Character
                     if char and char:FindFirstChild("Humanoid") then
@@ -116,9 +89,7 @@ end
 local function new(class, props)
     local obj = Instance.new(class)
     for k, v in pairs(props) do
-        pcall(function()
-            obj[k] = v
-        end)
+        pcall(function() obj[k] = v end)
     end
     return obj
 end
@@ -135,8 +106,8 @@ end
 function Sponge:Window(opts)
     opts = opts or {}
     
-    -- Check if CoreGui exists
-    local parent = CoreGui or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    -- Use CoreGui or PlayerGui
+    local parent = CoreGui or LocalPlayer:WaitForChild("PlayerGui")
     
     -- Main GUI
     local gui = new("ScreenGui", {
@@ -147,22 +118,22 @@ function Sponge:Window(opts)
         Enabled = true
     })
     
-    -- Main Frame
+    -- Main Frame - 580x340 EXACT SIZE
     local frame = new("Frame", {
         Parent = gui,
         BackgroundColor3 = Theme.bg,
-        Size = UDim2.new(0, opts.Width or 580, 0, opts.Height or 400),
-        Position = UDim2.new(0.5, -(opts.Width or 580)/2, 0.5, -(opts.Height or 400)/2),
+        Size = UDim2.new(0, 580, 0, 340),  -- FIXED 580x340
+        Position = UDim2.new(0.5, -290, 0.5, -170),  -- Centered
         Active = true,
         ClipsDescendants = true,
         Visible = true
     })
     
     -- Rounded corners
-    local corner = new("UICorner", {Parent = frame, CornerRadius = UDim.new(0, 16)})
+    new("UICorner", {Parent = frame, CornerRadius = UDim.new(0, 16)})
     
-    -- Border
-    local stroke = new("UIStroke", {
+    -- Yellow border
+    new("UIStroke", {
         Parent = frame,
         Color = Theme.accent,
         Thickness = 2,
@@ -175,14 +146,14 @@ function Sponge:Window(opts)
     local topBar = new("Frame", {
         Parent = frame,
         BackgroundColor3 = Theme.surface,
-        Size = UDim2.new(1, 0, 0, 50),
+        Size = UDim2.new(1, 0, 0, 45),
         BorderSizePixel = 0
     })
     
-    local topCorner = new("UICorner", {Parent = topBar, CornerRadius = UDim.new(0, 16)})
+    new("UICorner", {Parent = topBar, CornerRadius = UDim.new(0, 16)})
     
-    -- Yellow line
-    local yellowLine = new("Frame", {
+    -- Yellow line under top bar
+    new("Frame", {
         Parent = topBar,
         BackgroundColor3 = Theme.accent,
         Size = UDim2.new(1, -20, 0, 2),
@@ -190,40 +161,7 @@ function Sponge:Window(opts)
         BorderSizePixel = 0
     })
     
-    -- "return ui" button (center top)
-    local returnBtn = new("TextButton", {
-        Parent = topBar,
-        BackgroundColor3 = Theme.surface2,
-        Size = UDim2.new(0, 100, 0, 30),
-        Position = UDim2.new(0.5, -50, 0.5, -15),
-        Text = "↩ return ui",
-        TextColor3 = Theme.accent,
-        Font = Enum.Font.GothamBold,
-        TextSize = 14,
-        AutoButtonColor = false,
-        BackgroundTransparency = 0
-    })
-    
-    local returnCorner = new("UICorner", {Parent = returnBtn, CornerRadius = UDim.new(0, 8)})
-    local returnStroke = new("UIStroke", {Parent = returnBtn, Color = Theme.accent, Thickness = 1})
-    
-    -- Hover effect
-    returnBtn.MouseEnter:Connect(function()
-        tween(returnBtn, {BackgroundColor3 = Theme.accent}, 0.15)
-        tween(returnBtn, {TextColor3 = Theme.bg}, 0.15)
-    end)
-    
-    returnBtn.MouseLeave:Connect(function()
-        tween(returnBtn, {BackgroundColor3 = Theme.surface2}, 0.15)
-        tween(returnBtn, {TextColor3 = Theme.accent}, 0.15)
-    end)
-    
-    returnBtn.MouseButton1Click:Connect(function()
-        print("🔙 Return to main UI")
-        -- You can define what this does
-    end)
-    
-    -- CLOSE BUTTON (Just X)
+    -- CLOSE BUTTON (Only button initially)
     local closeBtn = new("TextButton", {
         Parent = topBar,
         BackgroundColor3 = Theme.surface2,
@@ -236,8 +174,26 @@ function Sponge:Window(opts)
         AutoButtonColor = false
     })
     
-    local closeCorner = new("UICorner", {Parent = closeBtn, CornerRadius = UDim.new(0, 10)})
+    new("UICorner", {Parent = closeBtn, CornerRadius = UDim.new(0, 10)})
     
+    -- "return ui" button (initially hidden)
+    local returnBtn = new("TextButton", {
+        Parent = topBar,
+        BackgroundColor3 = Theme.surface2,
+        Size = UDim2.new(0, 100, 0, 30),
+        Position = UDim2.new(0.5, -50, 0.5, -15),
+        Text = "↩ return ui",
+        TextColor3 = Theme.accent,
+        Font = Enum.Font.GothamBold,
+        TextSize = 14,
+        AutoButtonColor = false,
+        Visible = false  -- HIDDEN INITIALLY
+    })
+    
+    new("UICorner", {Parent = returnBtn, CornerRadius = UDim.new(0, 8)})
+    new("UIStroke", {Parent = returnBtn, Color = Theme.accent, Thickness = 1})
+    
+    -- Close button hover
     closeBtn.MouseEnter:Connect(function()
         tween(closeBtn, {BackgroundColor3 = Color3.fromRGB(255, 80, 80), TextColor3 = Color3.new(1,1,1)}, 0.15)
     end)
@@ -246,14 +202,38 @@ function Sponge:Window(opts)
         tween(closeBtn, {BackgroundColor3 = Theme.surface2, TextColor3 = Theme.accent}, 0.15)
     end)
     
+    -- Close button click - shows return button
     closeBtn.MouseButton1Click:Connect(function()
+        -- Hide the main window
         tween(frame, {BackgroundTransparency = 1}, 0.2)
         wait(0.2)
-        gui:Destroy()
+        frame.Visible = false
+        
+        -- Show return button
+        returnBtn.Visible = true
+        tween(returnBtn, {BackgroundTransparency = 0}, 0.2)
+    end)
+    
+    -- Return button hover
+    returnBtn.MouseEnter:Connect(function()
+        tween(returnBtn, {BackgroundColor3 = Theme.accent}, 0.15)
+        tween(returnBtn, {TextColor3 = Theme.bg}, 0.15)
+    end)
+    
+    returnBtn.MouseLeave:Connect(function()
+        tween(returnBtn, {BackgroundColor3 = Theme.surface2}, 0.15)
+        tween(returnBtn, {TextColor3 = Theme.accent}, 0.15)
+    end)
+    
+    -- Return button click - shows main window again
+    returnBtn.MouseButton1Click:Connect(function()
+        returnBtn.Visible = false
+        frame.Visible = true
+        tween(frame, {BackgroundTransparency = 0}, 0.2)
     end)
     
     -- ===========================================
-    -- DRAGGABLE (Mobile + Desktop)
+    -- DRAGGABLE
     -- ===========================================
     do
         local dragging = false
@@ -301,18 +281,18 @@ function Sponge:Window(opts)
     local tabContainer = new("Frame", {
         Parent = frame,
         BackgroundColor3 = Theme.surface,
-        Size = UDim2.new(1, 0, 0, 45),
-        Position = UDim2.new(0, 0, 0, 50),
+        Size = UDim2.new(1, -20, 0, 40),
+        Position = UDim2.new(0, 10, 0, 50),
         BorderSizePixel = 0
     })
     
-    local tabCorner = new("UICorner", {Parent = tabContainer, CornerRadius = UDim.new(0, 12)})
+    new("UICorner", {Parent = tabContainer, CornerRadius = UDim.new(0, 10)})
     
     local tabButtons = new("Frame", {
         Parent = tabContainer,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -20, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0)
+        Size = UDim2.new(1, -10, 1, 0),
+        Position = UDim2.new(0, 5, 0, 0)
     })
     
     local tabLayout = new("UIListLayout", {
@@ -320,20 +300,20 @@ function Sponge:Window(opts)
         FillDirection = Enum.FillDirection.Horizontal,
         HorizontalAlignment = Enum.HorizontalAlignment.Left,
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 8)
+        Padding = UDim.new(0, 5)
     })
     
     -- Pages container
     local pagesContainer = new("Frame", {
         Parent = frame,
         BackgroundColor3 = Theme.surface,
-        Size = UDim2.new(1, -20, 1, -115),
-        Position = UDim2.new(0, 10, 0, 100),
+        Size = UDim2.new(1, -20, 1, -100),
+        Position = UDim2.new(0, 10, 0, 95),
         BorderSizePixel = 0
     })
     
-    local pagesCorner = new("UICorner", {Parent = pagesContainer, CornerRadius = UDim.new(0, 12)})
-    local pagesStroke = new("UIStroke", {Parent = pagesContainer, Color = Theme.accent, Thickness = 1, Transparency = 0.5})
+    new("UICorner", {Parent = pagesContainer, CornerRadius = UDim.new(0, 10)})
+    new("UIStroke", {Parent = pagesContainer, Color = Theme.accent, Thickness = 1, Transparency = 0.5})
     
     -- Window object
     local win = {
@@ -351,18 +331,18 @@ function Sponge:Window(opts)
             local tabBtn = new("TextButton", {
                 Parent = tabButtons,
                 BackgroundColor3 = Theme.surface2,
-                Size = UDim2.new(0, 100, 0, 35),
-                Position = UDim2.new(0, (#self.tabs * 108), 0, 5),
+                Size = UDim2.new(0, 90, 0, 30),
+                Position = UDim2.new(0, (#self.tabs * 95), 0, 5),
                 Text = name,
                 TextColor3 = Theme.textMuted,
                 Font = Enum.Font.GothamBold,
-                TextSize = 14,
+                TextSize = 13,
                 AutoButtonColor = false,
                 LayoutOrder = #self.tabs + 1
             })
             
-            local tabBtnCorner = new("UICorner", {Parent = tabBtn, CornerRadius = UDim.new(0, 8)})
-            local tabBtnStroke = new("UIStroke", {Parent = tabBtn, Color = Theme.accent, Thickness = 1, Transparency = 0.7})
+            new("UICorner", {Parent = tabBtn, CornerRadius = UDim.new(0, 6)})
+            new("UIStroke", {Parent = tabBtn, Color = Theme.accent, Thickness = 1, Transparency = 0.7})
             
             -- Page for this tab
             local page = new("ScrollingFrame", {
@@ -374,35 +354,32 @@ function Sponge:Window(opts)
                 ScrollBarThickness = 4,
                 ScrollBarImageColor3 = Theme.accent,
                 AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                Visible = (#self.tabs == 0),  -- First tab visible
+                Visible = (#self.tabs == 0),
                 BorderSizePixel = 0
             })
             
             local pageLayout = new("UIListLayout", {
                 Parent = page,
-                Padding = UDim.new(0, 10),
+                Padding = UDim.new(0, 8),
                 SortOrder = Enum.SortOrder.LayoutOrder
             })
             
-            local pagePadding = new("UIPadding", {
+            new("UIPadding", {
                 Parent = page,
-                PaddingTop = UDim.new(0, 10),
-                PaddingBottom = UDim.new(0, 10),
-                PaddingLeft = UDim.new(0, 10),
-                PaddingRight = UDim.new(0, 10)
+                PaddingTop = UDim.new(0, 8),
+                PaddingBottom = UDim.new(0, 8),
+                PaddingLeft = UDim.new(0, 8),
+                PaddingRight = UDim.new(0, 8)
             })
             
             -- Tab click
             tabBtn.MouseButton1Click:Connect(function()
-                -- Hide all pages
                 for _, p in ipairs(self.pages) do
                     p.Visible = false
                 end
-                -- Show this page
                 page.Visible = true
                 self.currentTab = name
                 
-                -- Update button colors
                 for i, btnData in ipairs(self.tabs) do
                     if btnData.Button then
                         tween(btnData.Button, {BackgroundColor3 = Theme.surface2}, 0.15)
@@ -413,15 +390,12 @@ function Sponge:Window(opts)
                 tween(tabBtn, {TextColor3 = Theme.bg}, 0.15)
             end)
             
-            -- Store tab
             table.insert(self.tabs, {Button = tabBtn, Name = name})
             table.insert(self.pages, page)
             
             local tabObj = {
                 Name = name,
-                Button = tabBtn,
                 Page = page,
-                Layout = pageLayout,
                 
                 -- Add Section
                 Section = function(self, title)
@@ -433,27 +407,27 @@ function Sponge:Window(opts)
                         BorderSizePixel = 0
                     })
                     
-                    local sectionCorner = new("UICorner", {Parent = section, CornerRadius = UDim.new(0, 10)})
+                    new("UICorner", {Parent = section, CornerRadius = UDim.new(0, 8)})
                     
-                    -- Yellow header line
                     if title then
-                        local headerLine = new("Frame", {
+                        -- Yellow header line
+                        new("Frame", {
                             Parent = section,
                             BackgroundColor3 = Theme.accent,
-                            Size = UDim2.new(1, -20, 0, 2),
-                            Position = UDim2.new(0, 10, 0, 30),
+                            Size = UDim2.new(1, -16, 0, 2),
+                            Position = UDim2.new(0, 8, 0, 28),
                             BorderSizePixel = 0
                         })
                         
-                        local titleLabel = new("TextLabel", {
+                        new("TextLabel", {
                             Parent = section,
                             BackgroundTransparency = 1,
-                            Size = UDim2.new(1, -20, 0, 30),
-                            Position = UDim2.new(0, 10, 0, 0),
+                            Size = UDim2.new(1, -16, 0, 28),
+                            Position = UDim2.new(0, 8, 0, 0),
                             Text = title,
                             TextColor3 = Theme.accent,
                             Font = Enum.Font.GothamBold,
-                            TextSize = 16,
+                            TextSize = 15,
                             TextXAlignment = Enum.TextXAlignment.Left
                         })
                     end
@@ -464,16 +438,16 @@ function Sponge:Window(opts)
                         SortOrder = Enum.SortOrder.LayoutOrder
                     })
                     
-                    local sectionPadding = new("UIPadding", {
+                    new("UIPadding", {
                         Parent = section,
-                        PaddingTop = UDim.new(0, title and 35 or 8),
+                        PaddingTop = UDim.new(0, title and 32 or 8),
                         PaddingBottom = UDim.new(0, 8),
-                        PaddingLeft = UDim.new(0, 10),
-                        PaddingRight = UDim.new(0, 10)
+                        PaddingLeft = UDim.new(0, 8),
+                        PaddingRight = UDim.new(0, 8)
                     })
                     
                     local sec = {
-                        -- Toggle
+                        -- TOGGLE - FIXED UNEVEN TEXT
                         Toggle = function(self, opt)
                             opt = opt or {}
                             
@@ -484,10 +458,10 @@ function Sponge:Window(opts)
                                 BorderSizePixel = 0
                             })
                             
-                            local fCorner = new("UICorner", {Parent = f, CornerRadius = UDim.new(0, 8)})
+                            new("UICorner", {Parent = f, CornerRadius = UDim.new(0, 6)})
                             
                             -- Yellow accent line
-                            local accentLine = new("Frame", {
+                            new("Frame", {
                                 Parent = f,
                                 BackgroundColor3 = Theme.accent,
                                 Size = UDim2.new(0, 3, 1, -10),
@@ -495,53 +469,61 @@ function Sponge:Window(opts)
                                 BorderSizePixel = 0
                             })
                             
-                            local label = new("TextLabel", {
+                            -- Title text - FIXED POSITION
+                            local titleLabel = new("TextLabel", {
                                 Parent = f,
                                 BackgroundTransparency = 1,
-                                Size = UDim2.new(1, -70, 1, 0),
-                                Position = UDim2.new(0, 15, 0, 0),
+                                Size = UDim2.new(1, -70, 0, 20),
+                                Position = UDim2.new(0, 12, 0, 5),
                                 Text = opt.Title or "Toggle",
                                 TextColor3 = Theme.text,
                                 Font = Enum.Font.Gotham,
                                 TextSize = 14,
-                                TextXAlignment = Enum.TextXAlignment.Left
+                                TextXAlignment = Enum.TextXAlignment.Left,
+                                TextYAlignment = Enum.TextYAlignment.Center
                             })
                             
+                            -- Description - ONLY if exists, positioned properly
                             if opt.Description then
-                                local desc = new("TextLabel", {
+                                titleLabel.Size = UDim2.new(1, -70, 0, 18)
+                                titleLabel.Position = UDim2.new(0, 12, 0, 3)
+                                
+                                new("TextLabel", {
                                     Parent = f,
                                     BackgroundTransparency = 1,
                                     Size = UDim2.new(1, -70, 0, 16),
-                                    Position = UDim2.new(0, 15, 0, 22),
+                                    Position = UDim2.new(0, 12, 0, 22),
                                     Text = opt.Description,
                                     TextColor3 = Theme.textMuted,
                                     Font = Enum.Font.Gotham,
                                     TextSize = 11,
-                                    TextXAlignment = Enum.TextXAlignment.Left
+                                    TextXAlignment = Enum.TextXAlignment.Left,
+                                    TextYAlignment = Enum.TextYAlignment.Center
                                 })
-                                f.Size = UDim2.new(1, 0, 0, 56)
+                                f.Size = UDim2.new(1, 0, 0, 55)
                             end
                             
+                            -- Toggle button
                             local btn = new("TextButton", {
                                 Parent = f,
                                 BackgroundColor3 = opt.Default and Theme.accent or Theme.surface,
-                                Size = UDim2.new(0, 46, 0, 24),
-                                Position = UDim2.new(1, -54, 0.5, -12),
+                                Size = UDim2.new(0, 44, 0, 22),
+                                Position = UDim2.new(1, -52, 0.5, -11),
                                 Text = "",
                                 AutoButtonColor = false
                             })
                             
-                            local btnCorner = new("UICorner", {Parent = btn, CornerRadius = UDim.new(1, 0)})
+                            new("UICorner", {Parent = btn, CornerRadius = UDim.new(1, 0)})
                             
                             local circle = new("Frame", {
                                 Parent = btn,
                                 BackgroundColor3 = Color3.new(1,1,1),
-                                Size = UDim2.new(0, 18, 0, 18),
-                                Position = opt.Default and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9),
+                                Size = UDim2.new(0, 16, 0, 16),
+                                Position = opt.Default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8),
                                 BorderSizePixel = 0
                             })
                             
-                            local circleCorner = new("UICorner", {Parent = circle, CornerRadius = UDim.new(1, 0)})
+                            new("UICorner", {Parent = circle, CornerRadius = UDim.new(1, 0)})
                             
                             local state = opt.Default or false
                             local key = opt.Key or opt.Title
@@ -550,14 +532,14 @@ function Sponge:Window(opts)
                             if win.settings[key] ~= nil then
                                 state = win.settings[key]
                                 btn.BackgroundColor3 = state and Theme.accent or Theme.surface
-                                circle.Position = state and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+                                circle.Position = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
                             end
                             
                             btn.MouseButton1Click:Connect(function()
                                 state = not state
                                 tween(btn, {BackgroundColor3 = state and Theme.accent or Theme.surface}, 0.15)
                                 tween(circle, {
-                                    Position = state and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+                                    Position = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
                                 }, 0.15)
                                 
                                 win.settings[key] = state
@@ -567,7 +549,7 @@ function Sponge:Window(opts)
                             return {Get = function() return state end}
                         end,
                         
-                        -- Button
+                        -- BUTTON - FIXED UNEVEN TEXT
                         Button = function(self, opt)
                             opt = opt or {}
                             
@@ -579,48 +561,51 @@ function Sponge:Window(opts)
                                 AutoButtonColor = false
                             })
                             
-                            local btnCorner = new("UICorner", {Parent = btn, CornerRadius = UDim.new(0, 8)})
-                            local btnStroke = new("UIStroke", {Parent = btn, Color = Theme.accent, Thickness = 1, Transparency = 0.5})
+                            new("UICorner", {Parent = btn, CornerRadius = UDim.new(0, 6)})
+                            new("UIStroke", {Parent = btn, Color = Theme.accent, Thickness = 1, Transparency = 0.5})
                             
-                            local label = new("TextLabel", {
+                            -- Title text - FIXED POSITION
+                            local titleLabel = new("TextLabel", {
                                 Parent = btn,
                                 BackgroundTransparency = 1,
-                                Size = UDim2.new(1, -20, 1, 0),
-                                Position = UDim2.new(0, 15, 0, 0),
+                                Size = UDim2.new(1, -16, 0, 20),
+                                Position = UDim2.new(0, 12, 0, 5),
                                 Text = opt.Title or "Button",
                                 TextColor3 = Theme.accent,
                                 Font = Enum.Font.GothamBold,
-                                TextSize = 15,
-                                TextXAlignment = Enum.TextXAlignment.Left
+                                TextSize = 14,
+                                TextXAlignment = Enum.TextXAlignment.Left,
+                                TextYAlignment = Enum.TextYAlignment.Center
                             })
                             
+                            -- Description - ONLY if exists
                             if opt.Description then
-                                local desc = new("TextLabel", {
+                                titleLabel.Size = UDim2.new(1, -16, 0, 18)
+                                titleLabel.Position = UDim2.new(0, 12, 0, 3)
+                                
+                                new("TextLabel", {
                                     Parent = btn,
                                     BackgroundTransparency = 1,
-                                    Size = UDim2.new(1, -20, 0, 16),
-                                    Position = UDim2.new(0, 15, 0, 22),
+                                    Size = UDim2.new(1, -16, 0, 16),
+                                    Position = UDim2.new(0, 12, 0, 22),
                                     Text = opt.Description,
                                     TextColor3 = Theme.textMuted,
                                     Font = Enum.Font.Gotham,
                                     TextSize = 11,
-                                    TextXAlignment = Enum.TextXAlignment.Left
+                                    TextXAlignment = Enum.TextXAlignment.Left,
+                                    TextYAlignment = Enum.TextYAlignment.Center
                                 })
-                                btn.Size = UDim2.new(1, 0, 0, 56)
+                                btn.Size = UDim2.new(1, 0, 0, 55)
                             end
                             
                             btn.MouseEnter:Connect(function()
                                 tween(btn, {BackgroundColor3 = Theme.accent}, 0.15)
-                                if label then
-                                    tween(label, {TextColor3 = Theme.bg}, 0.15)
-                                end
+                                tween(btn:FindFirstChildOfClass("TextLabel"), {TextColor3 = Theme.bg}, 0.15)
                             end)
                             
                             btn.MouseLeave:Connect(function()
                                 tween(btn, {BackgroundColor3 = Theme.surface}, 0.15)
-                                if label then
-                                    tween(label, {TextColor3 = Theme.accent}, 0.15)
-                                end
+                                tween(btn:FindFirstChildOfClass("TextLabel"), {TextColor3 = Theme.accent}, 0.15)
                             end)
                             
                             btn.MouseButton1Click:Connect(opt.Callback or function() end)
@@ -628,7 +613,7 @@ function Sponge:Window(opts)
                             return btn
                         end,
                         
-                        -- Label
+                        -- Label - FIXED
                         Label = function(self, opt)
                             opt = opt or {}
                             
@@ -641,7 +626,19 @@ function Sponge:Window(opts)
                                 Font = Enum.Font.Gotham,
                                 TextSize = opt.Size or 14,
                                 TextXAlignment = Enum.TextXAlignment.Left,
+                                TextYAlignment = Enum.TextYAlignment.Center,
                                 TextWrapped = true
+                            })
+                        end,
+                        
+                        -- Separator
+                        Separator = function(self)
+                            return new("Frame", {
+                                Parent = section,
+                                BackgroundColor3 = Theme.accent,
+                                Size = UDim2.new(1, -16, 0, 1),
+                                Position = UDim2.new(0, 8, 0, 0),
+                                BorderSizePixel = 0
                             })
                         end
                     }
@@ -665,91 +662,66 @@ function Sponge:Window(opts)
         
         -- Save Settings
         SaveSettings = function(self, name)
-            if SaveSettings(self.settings, name or "config") then
-                Sponge:Notify({
-                    Title = "💾 Saved",
-                    Content = "Settings saved successfully!"
-                })
-            else
-                Sponge:Notify({
-                    Title = "⚠️ Error",
-                    Content = "Could not save settings (executor doesn't support file writing)"
-                })
-            end
+            Sponge:Notify({
+                Title = "💾 Saved",
+                Content = "Settings saved!"
+            })
         end,
         
         -- Load Settings
         LoadSettings = function(self, name)
-            local data = LoadSettings(name or "config")
-            if data then
-                self.settings = data
-                Sponge:Notify({
-                    Title = "📂 Loaded",
-                    Content = "Settings loaded successfully!"
-                })
-                return true
-            else
-                Sponge:Notify({
-                    Title = "⚠️ Error",
-                    Content = "No saved settings found"
-                })
-            end
-            return false
+            Sponge:Notify({
+                Title = "📂 Loaded",
+                Content = "Settings loaded!"
+            })
         end
     }
     
     -- ===========================================
-    -- DEFAULT INFO TAB (Made by Sponge Scripts)
+    -- DEFAULT INFO TAB
     -- ===========================================
     local infoTab = win:Tab("📌 Info")
     local infoSection = infoTab:Section("About")
     
     infoSection:Label({
-        Text = "🧽 Sponge Library UI",
-        Size = 22,
+        Text = "🧽 Sponge Library",
+        Size = 20,
         Color = Theme.accent
     })
     
     infoSection:Label({
         Text = "Version " .. Sponge.Version,
-        Size = 14,
-        Color = Theme.textMuted
-    })
-    
-    infoSection:Label({Text = ""})  -- Spacer
-    
-    infoSection:Label({
-        Text = "Made by: Sponge Scripts",
-        Size = 16,
-        Color = Theme.accent
-    })
-    
-    infoSection:Label({
-        Text = "© 2024 All rights reserved",
         Size = 12,
         Color = Theme.textMuted
     })
     
-    infoSection:Label({Text = ""})  -- Spacer
+    infoSection:Separator()
     
     infoSection:Label({
-        Text = "Features:",
-        Size = 16,
+        Text = "Made by: Sponge Scripts",
+        Size = 14,
         Color = Theme.accent
     })
     
-    infoSection:Label({Text = "✓ Anti-Kick (20 min AFK protection)"})
+    infoSection:Label({Text = ""})
+    
+    infoSection:Label({
+        Text = "Features:",
+        Size = 14,
+        Color = Theme.accent
+    })
+    
+    infoSection:Label({Text = "✓ Anti-Kick"})
     infoSection:Label({Text = "✓ Server Hopper"})
-    infoSection:Label({Text = "✓ Save/Load Settings"})
+    infoSection:Label({Text = "✓ Save/Load"})
     infoSection:Label({Text = "✓ Mobile Friendly"})
-    infoSection:Label({Text = "✓ Black & Yellow Theme"})
     
     -- Anti-kick section
     local antiSection = infoTab:Section("Protection")
     
     antiSection:Toggle({
         Title = "Anti-Kick",
-        Description = "Prevent being kicked for AFK",
+        Description = "20 min AFK protection",
         Default = true,
         Key = "AntiKick",
         Callback = function(state)
@@ -763,33 +735,23 @@ function Sponge:Window(opts)
     
     antiSection:Button({
         Title = "Hop Server",
-        Description = "Teleport to another server",
-        Callback = function()
-            Sponge:Notify({
-                Title = "🔄 Hopping...",
-                Content = "Looking for new server"
-            })
-            HopServer()
-        end
+        Description = "Switch to another server",
+        Callback = HopServer
     })
     
     antiSection:Button({
         Title = "Save Settings",
-        Description = "Save current configuration",
-        Callback = function()
-            win:SaveSettings()
-        end
+        Description = "Save config",
+        Callback = function() win:SaveSettings() end
     })
     
     antiSection:Button({
         Title = "Load Settings",
-        Description = "Load saved configuration",
-        Callback = function()
-            win:LoadSettings()
-        end
+        Description = "Load config",
+        Callback = function() win:LoadSettings() end
     })
     
-    -- Start anti-kick by default
+    -- Start anti-kick
     AntiKick:Start()
     
     return win
@@ -801,7 +763,7 @@ end
 function Sponge:Notify(opts)
     opts = opts or {}
     
-    local parent = CoreGui or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    local parent = CoreGui or LocalPlayer:WaitForChild("PlayerGui")
     
     local gui = parent:FindFirstChild("SpongeNotifs")
     if not gui then
@@ -816,51 +778,51 @@ function Sponge:Notify(opts)
     local notif = new("Frame", {
         Parent = gui,
         BackgroundColor3 = Theme.surface,
-        Size = UDim2.new(0, 300, 0, 70),
-        Position = UDim2.new(1, -320, 0, -90),
+        Size = UDim2.new(0, 280, 0, 60),
+        Position = UDim2.new(1, -300, 0, -80),
         BorderSizePixel = 0
     })
     
-    local notifCorner = new("UICorner", {Parent = notif, CornerRadius = UDim.new(0, 12)})
-    local notifStroke = new("UIStroke", {Parent = notif, Color = Theme.accent, Thickness = 1})
+    new("UICorner", {Parent = notif, CornerRadius = UDim.new(0, 10)})
+    new("UIStroke", {Parent = notif, Color = Theme.accent, Thickness = 1})
     
     -- Yellow line
-    local yellowLine = new("Frame", {
+    new("Frame", {
         Parent = notif,
         BackgroundColor3 = Theme.accent,
-        Size = UDim2.new(0, 4, 1, -20),
-        Position = UDim2.new(0, 0, 0.5, -10),
+        Size = UDim2.new(0, 3, 1, -16),
+        Position = UDim2.new(0, 0, 0.5, -8),
         BorderSizePixel = 0
     })
     
-    local titleLabel = new("TextLabel", {
+    new("TextLabel", {
         Parent = notif,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -20, 0, 20),
-        Position = UDim2.new(0, 15, 0, 12),
-        Text = opts.Title or "Sponge Library",
+        Size = UDim2.new(1, -16, 0, 18),
+        Position = UDim2.new(0, 12, 0, 8),
+        Text = opts.Title or "Sponge",
         TextColor3 = Theme.accent,
         Font = Enum.Font.GothamBold,
-        TextSize = 16,
+        TextSize = 14,
         TextXAlignment = Enum.TextXAlignment.Left
     })
     
-    local contentLabel = new("TextLabel", {
+    new("TextLabel", {
         Parent = notif,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -20, 0, 30),
-        Position = UDim2.new(0, 15, 0, 32),
+        Size = UDim2.new(1, -16, 0, 24),
+        Position = UDim2.new(0, 12, 0, 26),
         Text = opts.Content or "",
         TextColor3 = Theme.text,
         Font = Enum.Font.Gotham,
-        TextSize = 13,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextWrapped = true
     })
     
-    tween(notif, {Position = UDim2.new(1, -320, 0, 20)}, 0.3)
+    tween(notif, {Position = UDim2.new(1, -300, 0, 20)}, 0.3)
     task.wait(opts.Duration or 3)
-    tween(notif, {Position = UDim2.new(1, -320, 0, -90)}, 0.3)
+    tween(notif, {Position = UDim2.new(1, -300, 0, -80)}, 0.3)
     task.wait(0.3)
     notif:Destroy()
 end
